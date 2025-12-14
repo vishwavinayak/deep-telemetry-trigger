@@ -39,8 +39,14 @@ def load_config(config_path: Path) -> Dict[str, Any]:
 
 
 def prepare_data(config: Dict[str, Any]) -> Tuple[DataLoader, DataPreprocessor, int]:
-    data_cfg: Dict[str, Any] = config.get("data", {}) if isinstance(config.get("data", {}), dict) else {}
-    training_cfg: Dict[str, Any] = config.get("training", {}) if isinstance(config.get("training", {}), dict) else {}
+    data_cfg: Dict[str, Any] = (
+        config.get("data", {}) if isinstance(config.get("data", {}), dict) else {}
+    )
+    training_cfg: Dict[str, Any] = (
+        config.get("training", {})
+        if isinstance(config.get("training", {}), dict)
+        else {}
+    )
 
     base_path = Path(data_cfg.get("raw_path", "data/raw"))
     channel_id = str(data_cfg.get("channel_id", "T-1"))
@@ -55,13 +61,17 @@ def prepare_data(config: Dict[str, Any]) -> Tuple[DataLoader, DataPreprocessor, 
     train_windows = preprocessor.create_windows(scaled_train, window_size)
 
     dataset = TimeSeriesDataset(train_windows)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=False)
+    dataloader = DataLoader(
+        dataset, batch_size=batch_size, shuffle=True, drop_last=False
+    )
 
     return dataloader, preprocessor, train_data.shape[1]
 
 
 def prepare_model(config: Dict[str, Any], input_dim: int) -> LSTMAutoencoder:
-    model_cfg: Dict[str, Any] = config.get("model", {}) if isinstance(config.get("model", {}), dict) else {}
+    model_cfg: Dict[str, Any] = (
+        config.get("model", {}) if isinstance(config.get("model", {}), dict) else {}
+    )
 
     hidden_dim = int(model_cfg.get("hidden_dim", 64))
     latent_dim = int(model_cfg.get("latent_dim", 10))
@@ -84,7 +94,11 @@ def prepare_model(config: Dict[str, Any], input_dim: int) -> LSTMAutoencoder:
 
 
 def train(config: Dict[str, Any]) -> None:
-    training_cfg: Dict[str, Any] = config.get("training", {}) if isinstance(config.get("training", {}), dict) else {}
+    training_cfg: Dict[str, Any] = (
+        config.get("training", {})
+        if isinstance(config.get("training", {}), dict)
+        else {}
+    )
 
     dataloader, preprocessor, input_dim = prepare_data(config)
     model = prepare_model(config, input_dim)
@@ -145,7 +159,9 @@ def parse_args() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    )
 
     args = parse_args()
 
