@@ -16,3 +16,9 @@ class PredictRequest(BaseModel):
         if len(inner_lengths) != 1:
             raise ValueError("All rows must have the same length")
         return v
+
+
+class PredictResponse(BaseModel):
+    reconstruction: List[List[float]]
+    mse: float
+    is_anomaly: bool

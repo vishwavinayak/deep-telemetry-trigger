@@ -11,9 +11,10 @@ from typing import Any, Dict, List
 import numpy as np
 import torch
 import yaml
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from torch import nn
 
 # Ensure project root on path for module imports
@@ -22,7 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.models.lstm_autoencoder import LSTMAutoencoder  # noqa: E402
-from src.api.schema import PredictRequest  # noqa: E402
+from src.api.schema import PredictRequest, PredictResponse  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -30,6 +31,23 @@ logging.basicConfig(
 )
 
 app = FastAPI(title="SMAP LSTM Autoencoder API", version="1.0")
+
+# Prometheus metrics
+REQUEST_COUNT = Counter(
+    "total_requests",
+    "Total inference requests",
+    labelnames=["model_type"],
+)
+ANOMALY_COUNT = Counter(
+    "anomalies_detected",
+    "Total anomalies detected",
+    labelnames=["model_type"],
+)
+LATENCY = Histogram(
+    "inference_latency_seconds",
+    "Inference latency",
+    labelnames=["model_type"],
+)
 
 
 def load_config(config_path: Path) -> Dict[str, Any]:
@@ -175,10 +193,12 @@ def run_inference(tensor: torch.Tensor, use_quantized: bool) -> np.ndarray:
     return output.squeeze(0).cpu().numpy()
 
 
-@app.post("/predict")
+@app.post("/predict", response_model=PredictResponse)
 def predict(
     payload: PredictRequest, use_quantized: bool = Query(False)
 ) -> Dict[str, Any]:
+    model_label = "quantized" if use_quantized else "standard"
+
     try:
         if len(payload.data) != window_size:
             raise ValueError("Input must be a list of 100 time steps")
@@ -190,11 +210,24 @@ def predict(
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=400, detail={"error": str(exc)}) from exc
 
-    with torch.no_grad():
-        recon = run_inference(tensor, use_quantized=use_quantized)
+    REQUEST_COUNT.labels(model_type=model_label).inc()
+
+    with LATENCY.labels(model_type=model_label).time():
+        with torch.no_grad():
+            recon = run_inference(tensor, use_quantized=use_quantized)
+
+    # Mean squared reconstruction error over the window
+    mse = float(((tensor.numpy().squeeze(0) - recon) ** 2).mean())
+    threshold = 0.005
+    is_anomaly = mse > threshold
+    if is_anomaly:
+        ANOMALY_COUNT.labels(model_type=model_label).inc()
+
     return {
         "use_quantized": use_quantized,
         "reconstruction": recon.tolist(),
+        "mse": mse,
+        "is_anomaly": is_anomaly,
     }
 
 
@@ -250,3 +283,8 @@ def benchmark() -> Dict[str, Any]:
             "but memory reduction is confirmed."
         )
     return response
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
