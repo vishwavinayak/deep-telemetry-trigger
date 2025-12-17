@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 """
-Simple client script to exercise the FastAPI endpoint.
-Simulates sending a 100-step telemetry window to the trigger system.
+Client script to exercise the FastAPI endpoint with both standard and quantized models.
+Sends a 100-step telemetry window to /predict for each model variant.
 """
 
 import json
@@ -11,7 +11,7 @@ from typing import List
 import numpy as np
 import requests
 
-API_URL = "http://127.0.0.1:8000/predict?use_quantized=false"
+API_BASE = "http://127.0.0.1:8000"
 WINDOW_SIZE = 100
 INPUT_DIM = 1
 
@@ -23,14 +23,28 @@ def make_payload() -> dict:
     return {"data": data}
 
 
-def main() -> None:
+def send_request(use_quantized: bool) -> tuple[int, dict | None]:
+    url = f"{API_BASE}/predict?use_quantized={'true' if use_quantized else 'false'}"
     payload = make_payload()
-    resp = requests.post(API_URL, json=payload, timeout=10)
-    print("Status:", resp.status_code)
+    resp = requests.post(url, json=payload, timeout=10)
     try:
-        print(json.dumps(resp.json(), indent=2))
-    except Exception:  # noqa: BLE001
-        print(resp.text)
+        body = resp.json()
+    except Exception:
+        body = None
+    return resp.status_code, body
+
+
+def main() -> None:
+    status_standard, body_standard = send_request(use_quantized=False)
+    status_quantized, body_quantized = send_request(use_quantized=True)
+
+    print(f"[SUCCESS] Standard: {status_standard} | Quantized: {status_quantized}")
+    if body_standard:
+        print("Standard response:")
+        print(json.dumps(body_standard, indent=2))
+    if body_quantized:
+        print("Quantized response:")
+        print(json.dumps(body_quantized, indent=2))
 
 
 if __name__ == "__main__":
