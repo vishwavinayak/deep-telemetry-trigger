@@ -1,20 +1,19 @@
-
 data:
   raw_path: "data/raw"
-  channel_id: "T-1"        # The specific sensor we are analyzing
-  window_size: 100         # How many time steps the LSTM looks back
+  channel_id: "A-1" # The specific sensor we are analyzing
+  window_size: 100  # Size of the sliding window
   test_split: 0.2
   val_split: 0.1
 
 model:
-  input_dim: 25            # matches T-1.npy features (1 value + 24 commands)
-  latent_dim: 10           # The compressed representation size
-  hidden_dim: 64           # LSTM hidden layer size
+  input_dim: 1 # telemetry-only input after feature selection
+  latent_dim: 10 
+  hidden_dim: 64
   dropout: 0.2
 
 training:
   batch_size: 64
   epochs: 50
   learning_rate: 0.001
-  patience: 5              # Early stopping
+  patience: 5 # Early stopping
   save_dir: "models/"

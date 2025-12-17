@@ -8,9 +8,10 @@ from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
+
 class DataPreprocessor:
-    def __init__(self) -> None:
-        self.scaler: Optional[StandardScaler] = None
+    def __init__(self, scaler: Optional[StandardScaler] = None) -> None:
+        self.scaler: Optional[StandardScaler] = scaler
 
     def fit_transform(self, train_data: np.ndarray) -> np.ndarray:
         if train_data is None:
@@ -55,10 +56,16 @@ class DataPreprocessor:
             end_idx = start_idx + window_size
             windows[start_idx] = data[start_idx:end_idx]
 
+        if windows.shape[0] != n_samples:
+            raise RuntimeError(
+                f"Windowing produced unexpected count. Expected {n_samples}, got {windows.shape[0]}"
+            )
+
         logger.info(
-            "Created %s windows of size %s from input shape %s",
-            n_samples,
-            window_size,
+            "Windowing input shape=%s window_size=%s -> windows shape=%s (count=%s)",
             data.shape,
+            window_size,
+            windows.shape,
+            n_samples,
         )
         return windows

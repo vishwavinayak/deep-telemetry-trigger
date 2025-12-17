@@ -17,7 +17,6 @@ def load_model_config(config_path: Path) -> Dict[str, Any]:
             "Config file %s not found; using defaults where possible", config_path
         )
         return {}
-
     try:
         with config_path.open("r", encoding="utf-8") as handle:
             data = yaml.safe_load(handle) or {}
@@ -68,6 +67,12 @@ class SMAPLoader:
             logger.error(message)
             raise ValueError(message)
 
+        # Keep only the telemetry signal (first column) and preserve 2D shape
+        data = data[:, 0:1]
+        logger.info(
+            "Reducing features to 1 (Telemetry only). New shape: %s", data.shape
+        )
+
         logger.info("Loaded %s with shape %s", file_path, data.shape)
         return data
 
@@ -89,8 +94,8 @@ if __name__ == "__main__":
         config.get("data", {}) if isinstance(config.get("data", {}), dict) else {}
     )
 
-    base_path: Path = Path(data_config.get("base_path", "data/raw"))
-    channel: str = data_config.get("default_channel", "T-1")
+    base_path: Path = Path(data_config.get("raw_path", "data/raw"))
+    channel: str = data_config.get("channel_id", "T-1")
 
     loader = SMAPLoader(
         base_path=base_path, channel_id=channel, config_path=config_path
