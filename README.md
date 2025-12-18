@@ -24,6 +24,18 @@ In high-energy physics (like the LHC) and aerospace (NASA SMAP), data throughput
 **Dataset:** [NASA SMAP/MSL Anomaly Dataset](https://github.com/khundman/telemetry-anomaly-detection-images) (Telemetry channels including Power, Temperature, and Radiation).
 
 ---
+## 🛰️ Dataset Information
+**Source:** [NASA SMAP/MSL Anomaly Dataset (Hundman et al., 2018)](https://github.com/khundman/telemetry-anomaly-detection-images)
+
+This project utilizes real-world telemetry from:
+*   **SMAP (Soil Moisture Active Passive):** A NASA Earth observation satellite.
+*   **MSL (Mars Science Laboratory):** The Curiosity Rover on Mars.
+
+The data consists of multivariate time-series signals (Power, Temperature, Radiation, etc.) labeled with expert-validated anomalies.
+*   **Selected Channel:** `A-1` (Attitude Control System).
+*   **Preprocessing:** The original 25-dimensional data (including one-hot encoded commands) was filtered to a **univariate signal** to maximize the Signal-to-Noise Ratio (SNR) for the LSTM Autoencoder.
+
+---
 
 ## 📊 Performance & Results
 
