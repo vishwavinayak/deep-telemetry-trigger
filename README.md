@@ -21,11 +21,11 @@ This project implements an **LSTM Autoencoder** capable of learning normal opera
 ## 🚀 Project Context
 In high-energy physics (like the LHC) and aerospace (NASA SMAP), data throughput is massive. Traditional triggers rely on hard-coded rules. This project explores **ML-based Soft Triggers**: unsupervised models that can detect "unknown unknowns" (new physics or hardware faults) by learning to reconstruct normal background noise and flagging reconstruction errors.
 
-**Dataset:** [NASA SMAP/MSL Anomaly Dataset](https://github.com/khundman/telemetry-anomaly-detection-images) (Telemetry channels including Power, Temperature, and Radiation).
+**Dataset:** [NASA SMAP/MSL Anomaly Dataset](Kaggle)](https://www.kaggle.com/datasets/patrickfleith/nasa-anomaly-detection-dataset-smap-msl) (Telemetry channels including Power, Temperature, and Radiation).
 
 ---
 ## 🛰️ Dataset Information
-**Source:** [NASA SMAP/MSL Anomaly Dataset (Hundman et al., 2018)](https://github.com/khundman/telemetry-anomaly-detection-images)
+**Source:** [NASA SMAP/MSL Anomaly Dataset (Kaggle)](https://www.kaggle.com/datasets/patrickfleith/nasa-anomaly-detection-dataset-smap-msl)
 
 This project utilizes real-world telemetry from:
 *   **SMAP (Soil Moisture Active Passive):** A NASA Earth observation satellite.
