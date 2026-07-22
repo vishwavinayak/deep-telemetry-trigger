@@ -7,8 +7,8 @@
 ![Status](https://img.shields.io/badge/Status-FPGA_Ready-orange)
 
 > **⚡ Key Outcomes**
-> - **Unsupervised anomaly detection** with AUC > 0.90 on SMAP telemetry.
-> - **3.14× model size reduction** via Int8 quantization.
+> - **Unsupervised anomaly detection pipeline** with a checked-in evaluation result of AUC 0.4846 on SMAP channel A-1.
+> - **Quantized deployment path** via Int8 dynamic quantization.
 > - **Real-time inference API** with Prometheus-based observability.
 > - **ONNX-exported model** ready for FPGA HLS pipelines.
 
@@ -39,8 +39,8 @@ The data consists of multivariate time-series signals (Power, Temperature, Radia
 
 ## 📊 Performance & Results
 
-### 1. The "Money Shot": Perfect Physics Reconstruction
-The model achieved **perfect reconstruction** of the normal operating signal on Channel `A-1`. By switching from percentile-based thresholding to **Z-Score Thresholding** ($ \mu + 4\sigma $), the system filtered out floating-point noise while instantly triggering on true anomalies.
+### 1. Evaluation Results
+The checked-in evaluation artifact reports **precision 0.1486**, **recall 0.2588**, **F1 0.1888**, and **AUC 0.4846** on Channel `A-1`. The pipeline uses a threshold derived from the training reconstruction error distribution, but the current saved result does not support the earlier "perfect reconstruction" claim.
 
 ![Anomaly Detection Plot](results/anomaly_plot.png)
 *Figure 1: Reconstruction Error (Blue) vs Z-Score Threshold (Red). The model successfully reconstructs the complex wave patterns of the Attitude Control System and spikes only during the validated anomaly window.*
@@ -50,10 +50,12 @@ To simulate deployment on resource-constrained hardware (FPGAs/Embedded), I impl
 
 | Metric | Standard Model (Float32) | Quantized Model (Int8) | Impact |
 | :--- | :--- | :--- | :--- |
-| **Model Size** | **206 KB** | **65 KB** | **3.14x Reduction** 📉 |
+| **Model Size** | **~208 KB** | **~41 KB** | **~5.1x Reduction** |
 | **Inference Latency** | ~3.1ms | ~4.3ms | 0.72x Speedup* |
 
 *> **Note:** On CPU architectures with small batch sizes, quantization overhead can slightly increase latency. However, the **3.14x memory reduction** validates feasibility for FPGA synthesis where Block RAM (BRAM) is the limiting factor.*
+
+> **Note:** The size figures above are based on the checked-in model artifacts in `models/` and may change after retraining or re-exporting.
 
 ---
 
@@ -70,7 +72,7 @@ The system is instrumented with **Prometheus** to track trigger rates and A/B te
 ### 1. Data Pipeline & Feature Selection
 *   **Challenge:** Initial experiments on Channel `P-1` (Power) showed poor convergence (AUC 0.44) due to sparse binary command columns introducing noise.
 *   **Solution:** Implemented strict **Feature Selection**, isolating the continuous telemetry signal (Signal-to-Noise Ratio optimization).
-*   **Metric:** AUC improved from **0.44 to >0.90** (Channel A-1) after removing command noise.
+*   **Metric:** The current checked-in evaluation for Channel `A-1` reports **AUC 0.4846**. Any improvement over other feature choices or training runs should be treated as experimental until it is reproduced in a saved artifact.
 
 ### 2. The Model (LSTM Autoencoder)
 *   **Architecture:** `Input(1) -> LSTM(64) -> Latent(10) -> LSTM(64) -> Output(1)`
